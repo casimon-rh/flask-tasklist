@@ -4,7 +4,10 @@
 *.pyc
 *.pyo
 env/
+
+# nuevo
 venv/
+
 env*
 dist/
 build/

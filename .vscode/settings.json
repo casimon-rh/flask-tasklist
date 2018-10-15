@@ -1,4 +1,15 @@
 {
   "python.pythonPath": "venv/bin/python",
-  "python.linting.pylintArgs": ["--load-plugins", "pylint_flask"]
+  "python.linting.pylintArgs": [
+    "--load-plugins",
+    "pylint_flask"
+  ],
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/__pycache__": true
+  }
 }

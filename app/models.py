@@ -1,6 +1,10 @@
 """Main model"""
 from app import BD_
 from flask_bcrypt import Bcrypt
+from flask import current_app
+import jwt
+from datetime import datetime, timedelta
+
 
 class User(BD_.Model):
     """This class defines the users table """
@@ -32,6 +36,51 @@ class User(BD_.Model):
         BD_.session.add(self)
         BD_.session.commit()
 
+    @staticmethod
+    def get_all(user_id):
+        """This method gets all the bucketlists for a given user."""
+        return Bucketlist.query.filter_by(created_by=user_id)
+
+    def delete(self):
+        """Deletes a given bucketlist."""
+        db.session.delete(self)
+        db.session.commit()
+
+    def __repr__(self):
+        """Return a representation of a bucketlist instance."""
+        return "<Bucketlist: {}>".format(self.name)
+
+    def generate_token(self, user_id):
+        """Generate access token"""
+        try:
+            # setup a payload with an expiration time
+            payload = {
+                'exp': datetime.utcnow() + timedelta(minutes=5),
+                'iat': datetime.utcnow(),
+                'sub': user_id
+            }
+            # create the byte string token using the payload an the SECRET key
+            jwt_string = jwt.encode(
+                payload,
+                current_app.config.get('SECRET'),
+                algorithm='HS256'
+            )
+            return jwt_string
+        except Exception as e:
+            # return an error in string format if an exception occurs
+            return str(e)
+
+    @staticmethod
+    def decode_token(token):
+        """Decodes the access token from the Authorization header"""
+        try:
+            payload = jwt.decode(token, current_app.config.get('SECRET'))
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return "Expired token, please login again"
+        except jwt.InvalidTokenError:
+            return "Invalid token."
+
 
 class Bucketlist(BD_.Model):
     """This class represents the bucketlist table."""
@@ -40,12 +89,12 @@ class Bucketlist(BD_.Model):
 
     id = BD_.Column(BD_.Integer, primary_key=True)
     name = BD_.Column(BD_.String(255))
-    date_created = BD_.Column(BD_.DateTime, default=BD_.func.current_timestamp())
+    date_created = BD_.Column(
+        BD_.DateTime, default=BD_.func.current_timestamp())
     date_modified = BD_.Column(
         BD_.DateTime, default=BD_.func.current_timestamp(),
         onupdate=BD_.func.current_timestamp())
     created_by = BD_.Column(BD_.Integer, BD_.ForeignKey(User.id))
-
 
     def __init__(self, name, created_by):
         """initialize with name and its kreator."""
